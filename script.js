@@ -1,5 +1,6 @@
 const gameContainer = document.getElementById("game");
 const gameDiv = gameContainer.querySelector("div");
+var flipCounter = 0
 
 const COLORS = [
   "red",
@@ -43,18 +44,16 @@ let shuffledColors = shuffle(COLORS);
 // it creates a new div and gives it a class with the value of the color
 // it also adds an event listener for a click for each card
 function createDivsForColors(colorArray) {
-  gameContainer.setAttribute("data-flip", 0);
+  gameContainer.setAttribute("data-flip", flipCounter);
 
   for (let color of colorArray) {
     // create a new div
     const newDiv = document.createElement("div");
 
     // // give it a class attribute for the value we are looping over
-    // newDiv.classList.add(color);
-    // newDiv.classList.toggle(color);
     newDiv.setAttribute("data-color", color);
+    //also set a "flip" state data attribute of down
     newDiv.setAttribute("data-flip", "down");
-    // newDiv.setAttribute("data-clicked", clicked);
 
     // call a function handleCardClick when a div is clicked on
     newDiv.addEventListener("click", handleCardClick);
@@ -65,40 +64,57 @@ function createDivsForColors(colorArray) {
 }
 
 
-// TODO: Implement this function!
 function handleCardClick(e) {
-  assignedColor = e.target.getAttribute("data-color")
   //assign the correct class based on data attribute
+  assignedColor = e.target.getAttribute("data-color")
 
+  //if the clicked card is already matched, ignore don't do anything
+  if (e.target.dataset.flip === "matched"){
+    return
+  }
   //check if there are 2 cards face up
   //if not then flip the clicked one up and add one to the face up card count
   if (e.target.parentElement.dataset.flip < 2){
     e.target.classList.add(assignedColor);
     if (e.target.dataset.flip === "down"){
       e.target.dataset.flip = "up";
-      e.target.parentElement.dataset.flip += 1;
+      flipCounter += 1
+      e.target.parentElement.dataset.flip = flipCounter;
       }
     console.log("you just clicked", e.target);
     }
 
-    //this doesn't work
-  if (e.target.parentElement.dataset.flip === 2){
-    const flippedCards = gameContainer.querySelectorAll("[data-flip = 'up']")
-    const arrFlippedCards = Array.from(flippedCards)
-    if(arrFlippedCards[0] === arrFlippedCards[1]){
-      for (let card in flippedCards){
-        card.removeEventListener("click", handleCardClick);
+  let flippedCards = gameContainer.querySelectorAll("[data-flip = 'up']")
+  //check if two cards are face up
+  if (e.target.parentElement.dataset.flip == 2){
+    //if two cards are face up, compare their colors
+    let cardOne = flippedCards[0].dataset.color
+    let cardTwo = flippedCards[1].dataset.color
+    if (cardOne == cardTwo){
+      //assign "matched" data attr if colors match
+        flippedCards[0].dataset.flip = "matched";
+        flippedCards[1].dataset.flip = "matched";
       }
-    }
-    // else{
-    //   setTimeout(function(){
-    //     for (let card in flippedCards){
-    //       card.classList.remove(assignedColor)
-    //       }
-    //     }, 1000);
-    //   }
-    gameContainer.dataset.flip = 0
 
+    //unflip cards and remove color if cards do not match
+    else {
+      setTimeout(function(){
+        flippedCards.forEach(function(card){
+          let classColor = card.dataset.color
+          card.classList.remove(classColor)
+          card.dataset.flip = "down"
+        })}, 1000);
+      }
+    //reset count of flipped cards whether cards were matched or not
+    gameContainer.dataset.flip = 0
+    flipCounter = 0
+
+  }
+  const allCards = gameContainer.children
+
+  if (Array.from(allCards).every(function(card){
+    return card.dataset.flip === "matched"} )) {
+    window.alert("You won!")
   }
 }
 
